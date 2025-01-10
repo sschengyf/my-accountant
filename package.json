@@ -1,0 +1,9 @@
+{
+  "name": "my-accountant",
+  "version": "1.0.0",
+  "description": "Automation for my home accounting",
+  "repository": "https://github.com/sschengyf/my-accountant",
+  "author": "Ivan Cheng",
+  "license": "UNLICENSE",
+  "private": true
+}
