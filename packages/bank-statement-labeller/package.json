@@ -1,0 +1,15 @@
+{
+  "name": "bank-statement-labeller",
+  "version": "1.0.0",
+  "description": "A processor to label the bank statement based on my existing ledger",
+  "main": "index.js",
+  "author": "Ivan Cheng",
+  "license": "UNLICENSE",
+  "private": true,
+  "dependencies": {
+    "xlsx": "^0.18.5"
+  },
+  "scripts": {
+    "label-asb": "ts-node src/asb-labeller.ts"
+  }
+}
