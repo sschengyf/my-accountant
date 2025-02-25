@@ -7,9 +7,10 @@
   "license": "UNLICENSE",
   "private": true,
   "dependencies": {
+    "commander": "^13.1.0",
     "xlsx": "^0.18.5"
   },
   "scripts": {
-    "label-asb": "ts-node src/asb-labeller.ts"
+    "label-bank-statement": "ts-node src/index.ts"
   }
 }

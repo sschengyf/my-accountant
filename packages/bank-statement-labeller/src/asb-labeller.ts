@@ -2,48 +2,6 @@ import * as xlsx from 'xlsx';
 import * as path from 'path';
 import * as fs from 'fs';
 
-// Parse command line arguments
-interface CommandLineArgs {
-  bankStatementPath: string;
-  ledgerPath: string;
-  outputPath: string;
-}
-
-function resolveFilePath(filePath: string): string {
-  // If it's an absolute path, use it directly
-  if (path.isAbsolute(filePath)) {
-    return filePath;
-  }
-
-  // Try different relative paths
-  const possiblePaths = [
-    // Relative to current working directory
-    path.resolve(process.cwd(), filePath),
-    // Relative to script location
-    path.resolve(__dirname, filePath),
-    // Relative to script location, one level up (src/../)
-    path.resolve(__dirname, '..', filePath),
-  ];
-
-  for (const path of possiblePaths) {
-    if (fs.existsSync(path)) {
-      return path;
-    }
-  }
-
-  console.error(`Could not find file: ${filePath}`);
-  console.error('Tried the following locations:');
-  possiblePaths.forEach((p) => console.error(`- ${p}`));
-  process.exit(1);
-}
-
-function resolveOutputPath(outputPath: string): string {
-  if (path.isAbsolute(outputPath)) {
-    return outputPath;
-  }
-  return path.resolve(process.cwd(), outputPath);
-}
-
 function createOutputDir(outputPath: string): void {
   const outputDir = path.dirname(outputPath);
   if (!fs.existsSync(outputDir)) {
@@ -51,26 +9,15 @@ function createOutputDir(outputPath: string): void {
   }
 }
 
-function parseArgs(): CommandLineArgs {
-  const args = process.argv.slice(2); // Remove first two default args
-
-  if (args.length < 3) {
-    console.error(
-      'Usage: ts-node asb-labeller.ts <bank-statement.xlsx> <ledger.xlsx> [output.xlsx]'
-    );
-    process.exit(1);
-  }
-
-  return {
-    bankStatementPath: resolveFilePath(args[0]),
-    ledgerPath: resolveFilePath(args[1]),
-    outputPath: resolveOutputPath(args[2]),
-  };
-}
-
-function main() {
-  const { bankStatementPath, ledgerPath, outputPath } = parseArgs();
-
+export function labelAsbBankStatement({
+  bankStatementPath,
+  ledgerPath,
+  outputPath,
+}: {
+  bankStatementPath: string;
+  ledgerPath: string;
+  outputPath: string;
+}) {
   // Load the two workbooks using proper path joining
   const bankStatement: xlsx.WorkBook = xlsx.readFile(bankStatementPath);
   const ledger: xlsx.WorkBook = xlsx.readFile(ledgerPath);
@@ -128,5 +75,3 @@ function main() {
 
   console.log(`Labelled file saved to ${outputPath}`);
 }
-
-main();
