@@ -1,5 +1,5 @@
 {
-  "name": "bank-statement-labeller",
+  "name": "js-bank-statement-labeller",
   "version": "1.0.0",
   "description": "A processor to label the bank statement based on my existing ledger",
   "main": "index.js",
