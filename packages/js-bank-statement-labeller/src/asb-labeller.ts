@@ -56,7 +56,8 @@ export function labelAsbBankStatement({
     // Find matching row in ledgerData
     const matchingRow = ledgerData.find(
       (row2) =>
-        row2['Date'] === row1['Date'] && row2['Amount'] === row1['Amount']
+        row2['Date'] === row1['Date'] &&
+        row2['Amount'].replace(/,/g, '') === row1['Amount'].replace(/,/g, '')
     );
 
     // Copy category if match found
