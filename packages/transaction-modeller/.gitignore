@@ -1,0 +1,4 @@
+.ipynb_checkpoints
+notebooks/data/*
+!notebooks/data/.keep
+!notebooks/data/**/.keep
