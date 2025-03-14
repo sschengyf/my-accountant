@@ -97,8 +97,6 @@ app.post('/upload', upload.single('file'), (async (
       },
     } = result;
 
-    console.log('result: ', result);
-
     data.forEach((row, i) => {
       const category = labelData[i];
       const probabilities = probabilitiesData.slice(
