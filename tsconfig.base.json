@@ -6,7 +6,9 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "outDir": "./dist"
+    "allowJs": true,
+    "checkJs": false,
+    "noImplicitAny": false
   },
   "exclude": ["node_modules", "dist"]
 }

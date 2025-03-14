@@ -4,7 +4,7 @@
   "description": "Automation for my home accounting",
   "repository": "https://github.com/sschengyf/my-accountant",
   "author": "Ivan Cheng",
-  "license": "UNLICENSE",
+  "license": "UNLICENSED",
   "private": true,
   "workspaces": [
     "packages/*"
