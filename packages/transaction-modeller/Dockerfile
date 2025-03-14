@@ -5,7 +5,7 @@ FROM quay.io/jupyter/scipy-notebook:latest
 USER root
 
 # Install scikit-learn and other dependencies
-RUN pip install scikit-learn sentence_transformers faiss-cpu
+RUN pip install scikit-learn sentence_transformers faiss-cpu skl2onnx onnxruntime
 
 # Switch back to the default user to run the notebook
 USER jovyan
