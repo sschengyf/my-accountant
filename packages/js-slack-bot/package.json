@@ -1,0 +1,39 @@
+{
+  "name": "js-slack-bot",
+  "version": "1.0.0",
+  "author": "Ivan Cheng <sschengyf@gmail.com>",
+  "homepage": "https://github.com/sschengyf/my-accountant#readme",
+  "license": "UNLICENSED",
+  "main": "dist/js-slack-bot.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sschengyf/my-accountant.git"
+  },
+  "scripts": {
+    "dev": "PORT=3002 nodemon"
+  },
+  "nodemonConfig": {
+    "watch": [
+      "src"
+    ],
+    "ext": "ts",
+    "ignore": [
+      "node_modules"
+    ],
+    "exec": "ts-node src/index.ts"
+  },
+  "dependencies": {
+    "@slack/bolt": "^4.2.1",
+    "axios": "^1.8.3",
+    "dotenv": "^16.4.7",
+    "form-data": "^4.0.2"
+  },
+  "devDependencies": {
+    "@types/form-data": "^2.5.2",
+    "@types/node": "^22.13.10",
+    "@types/nodemon": "^1.19.6",
+    "nodemon": "^3.1.9",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.2"
+  }
+}
