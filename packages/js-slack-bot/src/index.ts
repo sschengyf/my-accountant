@@ -50,10 +50,10 @@ app.event('file_shared', async ({ event, client }) => {
       const formData = new FormData();
       formData.append('file', fs.createReadStream(filePath));
 
-      console.log(`Uploading file to API: ${process.env.API_URL}`);
+      console.log(`Uploading file to API: ${process.env.CATEGORIZER_API_URL}`);
 
       const apiResponse = await axios.post(
-        process.env.API_URL as string,
+        process.env.CATEGORIZER_API_URL as string,
         formData,
         {
           headers: { 'Content-Type': 'multipart/form-data' },
