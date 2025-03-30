@@ -5,6 +5,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import cors from 'cors';
 import { categorizeStatementData } from './categorizer';
+import { generateMoneyWizCSV } from './money-wiz-file-generator';
 
 const app = express();
 const upload = multer({ dest: 'uploads/' });
@@ -34,9 +35,18 @@ app.post('/upload', upload.single('file'), (async (
 
     fs.unlinkSync(filePath); // Remove uploaded file after processing
 
-    const responseData = await categorizeStatementData(data);
+    const categorizedData = await categorizeStatementData(data);
+    const csv = generateMoneyWizCSV(categorizedData);
 
-    res.json(responseData);
+    // Set response headers for CSV
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader(
+      'Content-Disposition',
+      'attachment; filename="money-wiz.csv"'
+    );
+
+    // Send the CSV string as the response
+    res.send(csv);
     return;
   } catch (error) {
     console.error('Error processing file:', error);

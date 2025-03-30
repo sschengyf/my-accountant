@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as ort from 'onnxruntime-node';
 import { pipeline } from '@xenova/transformers';
+import { ASBTransaction, ASBTransactionCategorized } from './types';
 
 // Load classifier ONNX model
 let transaction_classifier: ort.InferenceSession;
@@ -21,7 +22,9 @@ let embedder: any;
   embedder = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
 })();
 
-export const categorizeStatementData = async (data) => {
+export async function categorizeStatementData(
+  data: ASBTransaction[] = []
+): Promise<ASBTransactionCategorized[]> {
   const requiredColumns = ['Payee', 'Memo', 'Tran Type'];
   if (!requiredColumns.every((col) => col in data[0])) {
     throw new Error('Missing required columns in data.');
@@ -59,15 +62,19 @@ export const categorizeStatementData = async (data) => {
     },
   } = result;
 
-  data.forEach((row, i) => {
+  const categorizedData = data.map((row, i) => {
     const category = labelData[i];
     const probabilities = probabilitiesData.slice(
       i * numCategories,
       (i + 1) * numCategories - 1
     );
-    row['Predicted Category'] = category || 'Uncategorized';
-    row['Probability'] = Math.max(...probabilities);
+
+    return {
+      ...row,
+      'Predicted Category': categories[category] || 'Uncategorized',
+      Probability: Math.max(...probabilities),
+    };
   });
 
-  return data;
-};
+  return categorizedData;
+}
