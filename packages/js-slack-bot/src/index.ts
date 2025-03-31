@@ -60,12 +60,19 @@ app.event('file_shared', async ({ event, client }) => {
         }
       );
 
-      console.log('API Response:', apiResponse.data);
+      const csvContent = apiResponse.data;
 
       // Notify Slack user
       await client.chat.postMessage({
         channel: event.channel_id,
         text: `Your file **${fileName}** has been uploaded and is being processed!`,
+      });
+
+      await app.client.files.uploadV2({
+        channel_id: event.channel_id,
+        content: csvContent,
+        filename: 'data.csv',
+        title: 'Generated CSV File',
       });
 
       fs.unlinkSync(filePath); // Clean up file

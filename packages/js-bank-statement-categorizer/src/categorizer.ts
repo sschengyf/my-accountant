@@ -71,7 +71,7 @@ export async function categorizeStatementData(
 
     return {
       ...row,
-      'Predicted Category': categories[category] || 'Uncategorized',
+      'Predicted Category': category || 'Uncategorized',
       Probability: Math.max(...probabilities),
     };
   });

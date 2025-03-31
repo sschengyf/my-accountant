@@ -6,6 +6,7 @@ import * as path from 'path';
 import cors from 'cors';
 import { categorizeStatementData } from './categorizer';
 import { generateMoneyWizCSV } from './money-wiz-file-generator';
+import { ASBTransaction } from './types';
 
 const app = express();
 const upload = multer({ dest: 'uploads/' });
@@ -27,11 +28,14 @@ app.post('/upload', upload.single('file'), (async (
     const filePath = path.join('uploads', req.file.filename);
     const workbook = xlsx.readFile(filePath);
     const sheetName = workbook.SheetNames[0];
-    const data: any[] = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName], {
-      range: 5,
-      header: 5,
-      raw: false,
-    });
+    const data = xlsx.utils.sheet_to_json<ASBTransaction>(
+      workbook.Sheets[sheetName],
+      {
+        range: 5,
+        header: 5,
+        raw: false,
+      }
+    );
 
     fs.unlinkSync(filePath); // Remove uploaded file after processing
 

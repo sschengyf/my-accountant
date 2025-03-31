@@ -18,7 +18,7 @@ const CSV_COLS = [
 const INIT_CSV_ROW = CSV_COLS.reduce((acc, key) => {
   acc[key] = '';
   return acc;
-}, {} as Record<string, string>);
+}, {});
 
 const CSV_HEADER_ROW = [
   CSV_SEP, // Custom separator
