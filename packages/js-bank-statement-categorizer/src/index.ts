@@ -28,11 +28,37 @@ app.post('/upload', upload.single('file'), (async (
     const filePath = path.join('uploads', req.file.filename);
     const workbook = xlsx.readFile(filePath);
     const sheetName = workbook.SheetNames[0];
+
+    const allData: any[] = xlsx.utils.sheet_to_json(
+      workbook.Sheets[sheetName],
+      {
+        header: 1,
+      }
+    );
+
+    const ledgerBalanceRowNum = allData.findIndex((row) => {
+      return (
+        row[0] &&
+        typeof row[0] === 'string' &&
+        row[0].includes('Ledger Balance')
+      );
+    });
+
+    if (ledgerBalanceRowNum !== -1) {
+      console.log(
+        `The row number of "Ledger Balance" is: ${ledgerBalanceRowNum}`
+      );
+    } else {
+      console.log('Ledger Balance row not found');
+    }
+
+    const startRowNum = ledgerBalanceRowNum + 1; // Skip the header rows
+
     const data = xlsx.utils.sheet_to_json<ASBTransaction>(
       workbook.Sheets[sheetName],
       {
-        range: 5,
-        header: 5,
+        range: startRowNum,
+        header: startRowNum,
         raw: false,
       }
     );
