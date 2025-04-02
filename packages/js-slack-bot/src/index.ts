@@ -16,14 +16,20 @@ const app = new App({
 // Listen for file uploads
 app.event('file_shared', async ({ event, client }) => {
   try {
-    console.log('File uploaded:', event);
-
     // Fetch file details
     const fileInfo = await client.files.info({ file: event.file_id });
     const fileUrl = fileInfo.file?.url_private_download || '';
     const fileName = fileInfo.file?.name || '';
 
-    console.log(`Downloading file: ${fileName}`);
+    // Get bot user ID
+    const authResponse = await app.client.auth.test();
+    const botUserId = authResponse.user_id;
+
+    // Check if the file was uploaded by the bot
+    const uploaderId = fileInfo.file?.user || fileInfo.file?.bot_id;
+    if (uploaderId === botUserId) {
+      return;
+    }
 
     // Download file from Slack
     const headers = { Authorization: `Bearer ${process.env.SLACK_BOT_TOKEN}` };
@@ -44,13 +50,9 @@ app.event('file_shared', async ({ event, client }) => {
     response.data.pipe(writer);
 
     writer.on('finish', async () => {
-      console.log('File downloaded:', filePath);
-
       // Upload file to API
       const formData = new FormData();
       formData.append('file', fs.createReadStream(filePath));
-
-      console.log(`Uploading file to API: ${process.env.CATEGORIZER_API_URL}`);
 
       const apiResponse = await axios.post(
         process.env.CATEGORIZER_API_URL as string,
@@ -90,8 +92,6 @@ app.event('message', async ({ event, client }) => {
 
     if (!('text' in event)) return;
     if (!event.text) return;
-
-    console.log(`User said: ${event.text}`);
 
     // Echo back the message
     await client.chat.postMessage({
