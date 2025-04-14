@@ -1,4 +1,5 @@
 import * as fs from 'fs';
+import * as path from 'path';
 import * as ort from 'onnxruntime-node';
 import { pipeline } from '@xenova/transformers';
 import { ASBTransaction, ASBTransactionCategorized } from './types';
@@ -7,13 +8,13 @@ import { ASBTransaction, ASBTransactionCategorized } from './types';
 let transaction_classifier: ort.InferenceSession;
 (async () => {
   transaction_classifier = await ort.InferenceSession.create(
-    'models/transaction_classifier.onnx'
+    path.join(__dirname, 'models', 'transaction_classifier.onnx'),
   );
 })();
 
 // Load category mappings
 const categories: string[] = JSON.parse(
-  fs.readFileSync('models/transaction_categories.json', 'utf8')
+  fs.readFileSync(path.join(__dirname, 'models', 'transaction_categories.json'), 'utf8'),
 );
 
 // Load Sentence Transformer model
@@ -23,7 +24,7 @@ let embedder: any;
 })();
 
 export async function categorizeStatementData(
-  data: ASBTransaction[] = []
+  data: ASBTransaction[] = [],
 ): Promise<ASBTransactionCategorized[]> {
   const requiredColumns = ['Payee', 'Memo', 'Tran Type'];
   if (!requiredColumns.every((col) => col in data[0])) {
@@ -31,10 +32,7 @@ export async function categorizeStatementData(
   }
 
   const transactionContexts = data.map(
-    (row) =>
-      `${row.Payee.trim()} ${row.Memo?.trim() || ''} ${
-        row['Tran Type']?.trim() || ''
-      }`
+    (row) => `${row.Payee.trim()} ${row.Memo?.trim() || ''} ${row['Tran Type']?.trim() || ''}`,
   );
 
   const embeddings = await embedder(transactionContexts, {
@@ -43,11 +41,7 @@ export async function categorizeStatementData(
   });
 
   // Convert embeddings to tensor for ONNX
-  const inputTensor = new ort.Tensor(
-    embeddings.type,
-    embeddings.data,
-    embeddings.dims
-  );
+  const inputTensor = new ort.Tensor(embeddings.type, embeddings.data, embeddings.dims);
 
   // Run classification
   const result = await transaction_classifier.run({
@@ -64,10 +58,7 @@ export async function categorizeStatementData(
 
   const categorizedData = data.map((row, i) => {
     const category = labelData[i];
-    const probabilities = probabilitiesData.slice(
-      i * numCategories,
-      (i + 1) * numCategories - 1
-    );
+    const probabilities = probabilitiesData.slice(i * numCategories, (i + 1) * numCategories - 1);
 
     return {
       ...row,
