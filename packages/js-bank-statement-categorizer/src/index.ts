@@ -15,10 +15,7 @@ const PORT = process.env.PORT || 8000;
 app.use(cors());
 app.use(express.json());
 
-app.post('/upload', upload.single('file'), (async (
-  req: Request,
-  res: Response
-) => {
+app.post('/upload', upload.single('file'), (async (req: Request, res: Response) => {
   try {
     if (!req.file) {
       res.status(400).json({ error: 'No file uploaded.' });
@@ -29,39 +26,21 @@ app.post('/upload', upload.single('file'), (async (
     const workbook = xlsx.readFile(filePath);
     const sheetName = workbook.SheetNames[0];
 
-    const allData: any[] = xlsx.utils.sheet_to_json(
-      workbook.Sheets[sheetName],
-      {
-        header: 1,
-      }
-    );
-
-    const ledgerBalanceRowNum = allData.findIndex((row) => {
-      return (
-        row[0] &&
-        typeof row[0] === 'string' &&
-        row[0].includes('Ledger Balance')
-      );
+    const allData: any[] = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName], {
+      header: 1,
     });
 
-    if (ledgerBalanceRowNum !== -1) {
-      console.log(
-        `The row number of "Ledger Balance" is: ${ledgerBalanceRowNum}`
-      );
-    } else {
-      console.log('Ledger Balance row not found');
-    }
+    const ledgerBalanceRowNum = allData.findIndex((row) => {
+      return row[0] && typeof row[0] === 'string' && row[0].includes('Ledger Balance');
+    });
 
     const startRowNum = ledgerBalanceRowNum + 1; // Skip the header rows
 
-    const data = xlsx.utils.sheet_to_json<ASBTransaction>(
-      workbook.Sheets[sheetName],
-      {
-        range: startRowNum,
-        header: startRowNum,
-        raw: false,
-      }
-    );
+    const data = xlsx.utils.sheet_to_json<ASBTransaction>(workbook.Sheets[sheetName], {
+      range: startRowNum,
+      header: startRowNum,
+      raw: false,
+    });
 
     fs.unlinkSync(filePath); // Remove uploaded file after processing
 
@@ -70,10 +49,7 @@ app.post('/upload', upload.single('file'), (async (
 
     // Set response headers for CSV
     res.setHeader('Content-Type', 'text/csv');
-    res.setHeader(
-      'Content-Disposition',
-      'attachment; filename="money-wiz.csv"'
-    );
+    res.setHeader('Content-Disposition', 'attachment; filename="money-wiz.csv"');
 
     // Send the CSV string as the response
     res.send(csv);

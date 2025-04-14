@@ -10,8 +10,12 @@ RUN yarn workspace js-bank-statement-categorizer build
 FROM node:20-slim AS production
 WORKDIR /app
 
+ARG PORT=3001
+
+EXPOSE ${PORT}
+
 # Add any required ENV variables
-ENV NODE_ENV=production PORT=3000
+ENV NODE_ENV=production PORT=${PORT}
 
 # Copy only production necessary files
 COPY --from=builder /app/packages/js-bank-statement-categorizer/package.json .
