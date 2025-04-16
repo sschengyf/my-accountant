@@ -1,4 +1,3 @@
-# my-monorepo/Dockerfile.base
 FROM node:20-slim AS base
 
 WORKDIR /app

@@ -10,7 +10,8 @@
     "url": "git+https://github.com/sschengyf/my-accountant.git"
   },
   "scripts": {
-    "dev": "PORT=3002 nodemon"
+    "dev": "PORT=3002 nodemon",
+    "build": "rm -rf dist && tsc"
   },
   "nodemonConfig": {
     "watch": [

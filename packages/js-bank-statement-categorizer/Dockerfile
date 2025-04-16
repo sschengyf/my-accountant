@@ -1,4 +1,3 @@
-# my-monorepo/packages/js-bank-statement-categorizer/Dockerfile
 FROM base AS builder
 
 WORKDIR /app/packages/js-bank-statement-categorizer

@@ -18,6 +18,7 @@
   },
   "scripts": {
     "build:image:base": "docker build -f Dockerfile -t base .",
-    "build:image:js-bank-statement-categorizer": "docker build -f packages/js-bank-statement-categorizer/Dockerfile -t js-bank-statement-categorizer ."
+    "build:image:js-bank-statement-categorizer": "docker build -f packages/js-bank-statement-categorizer/Dockerfile -t js-bank-statement-categorizer .",
+    "build:image:js-slack-bot": "docker build -f packages/js-slack-bot/Dockerfile -t js-slack-bot ."
   }
 }
