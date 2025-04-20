@@ -62,5 +62,5 @@ app.post('/upload', upload.single('file'), (async (req: Request, res: Response) 
 }) as RequestHandler);
 
 app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
+  console.log(`Server running on port: ${PORT}`);
 });
