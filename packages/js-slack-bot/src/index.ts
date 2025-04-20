@@ -1,4 +1,4 @@
-import { App } from '@slack/bolt';
+import { App, ExpressReceiver } from '@slack/bolt';
 import axios from 'axios';
 import dotenv from 'dotenv';
 import fs from 'fs';
@@ -7,10 +7,17 @@ import FormData from 'form-data';
 
 dotenv.config();
 
+const receiver = new ExpressReceiver({ signingSecret: process.env.SLACK_SIGNING_SECRET as string });
+
+receiver.router.get('/health', (req, res) => {
+  res.status(200).send('OK');
+});
+
 // Initialize Slack Bot
 const app = new App({
   token: process.env.SLACK_BOT_TOKEN as string,
   signingSecret: process.env.SLACK_SIGNING_SECRET as string,
+  receiver,
 });
 
 // Listen for file uploads
@@ -54,13 +61,9 @@ app.event('file_shared', async ({ event, client }) => {
       const formData = new FormData();
       formData.append('file', fs.createReadStream(filePath));
 
-      const apiResponse = await axios.post(
-        process.env.CATEGORIZER_API_URL as string,
-        formData,
-        {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        }
-      );
+      const apiResponse = await axios.post(process.env.CATEGORIZER_API_URL as string, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
 
       const csvContent = apiResponse.data;
 
@@ -105,6 +108,7 @@ app.event('message', async ({ event, client }) => {
 
 // Start Slack bot
 (async () => {
-  await app.start(process.env.PORT || 3000);
-  console.log('⚡️ Slack bot is running!');
+  const port = process.env.PORT || 3000;
+  await app.start(port);
+  console.log('⚡️ Slack bot is running on port: ', port);
 })();
