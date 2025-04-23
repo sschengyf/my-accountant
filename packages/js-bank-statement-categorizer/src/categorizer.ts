@@ -8,13 +8,13 @@ import { ASBTransaction, ASBTransactionCategorized } from './types';
 let transaction_classifier: ort.InferenceSession;
 (async () => {
   transaction_classifier = await ort.InferenceSession.create(
-    path.join(__dirname, 'models', 'transaction_classifier.onnx'),
+    path.join(__dirname, '../', 'models', 'transaction_classifier.onnx'),
   );
 })();
 
 // Load category mappings
 const categories: string[] = JSON.parse(
-  fs.readFileSync(path.join(__dirname, 'models', 'transaction_categories.json'), 'utf8'),
+  fs.readFileSync(path.join(__dirname, '../', 'models', 'transaction_categories.json'), 'utf8'),
 );
 
 // Load Sentence Transformer model

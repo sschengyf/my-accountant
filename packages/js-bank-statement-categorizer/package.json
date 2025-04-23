@@ -11,7 +11,7 @@
     "url": "git+https://github.com/sschengyf/my-accountant.git"
   },
   "scripts": {
-    "build": "rm -rf dist && tsc && cp -r models dist/models",
+    "build": "rm -rf dist && tsc",
     "start": "node ./dist/index.js",
     "dev": "PORT=3001 nodemon"
   },
