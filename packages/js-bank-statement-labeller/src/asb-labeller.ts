@@ -23,32 +23,29 @@ export function labelAsbBankStatement({
   const ledger: xlsx.WorkBook = xlsx.readFile(ledgerPath);
 
   // Get the first worksheet from each workbook
-  const bankStatementSheet: xlsx.WorkSheet =
-    bankStatement.Sheets[bankStatement.SheetNames[0]];
+  const bankStatementSheet: xlsx.WorkSheet = bankStatement.Sheets[bankStatement.SheetNames[0]];
   const ledgerSheet: xlsx.WorkSheet = ledger.Sheets[ledger.SheetNames[0]];
 
   // Convert the sheets to JSON
-  const bankStatementData: Record<string, any>[] = xlsx.utils.sheet_to_json(
-    bankStatementSheet,
-    {
-      range: 5,
-      header: 5,
-      raw: false,
-    }
-  );
-  const ledgerData: Record<string, any>[] = xlsx.utils.sheet_to_json(
-    ledgerSheet,
-    {
-      raw: false,
-    }
-  );
+  const bankStatementData: Record<string, any>[] = xlsx.utils.sheet_to_json(bankStatementSheet, {
+    range: 5,
+    header: 5,
+    raw: false,
+  });
+  const ledgerData: Record<string, any>[] = xlsx.utils.sheet_to_json(ledgerSheet, {
+    raw: false,
+  });
 
-  // Assuming we want to copy a column "ColumnToCopy" from spreadbankStatementSheet to spreadledgerSheet
-  const columnToCopy: string = 'Category';
+  // Assuming we want to copy a column "ColumnToCopy" from bank statement sheet to ledger sheet
+  const columnToCopy = 'Category';
+  const bankTransfers = 'Transfers';
 
-  //Check if the column exists in the first sheet
-  if (!ledgerData[1]?.hasOwnProperty(columnToCopy)) {
-    console.error(`Column "${columnToCopy}" not found in spreadledgerSheet.`);
+  //Check if the column exists in the ledger sheet
+  if (![bankTransfers, columnToCopy].find((col: string) => ledgerData[1]?.hasOwnProperty(col))) {
+    console.log('ledgerData[1]', ledgerData[1]);
+    console.error(
+      `Neither column "${columnToCopy}" nor "${bankTransfers}" was found in ledger sheet.`,
+    );
     process.exit(1);
   }
 
@@ -57,7 +54,7 @@ export function labelAsbBankStatement({
     const matchingRow = ledgerData.find(
       (row2) =>
         row2['Date'] === row1['Date'] &&
-        row2['Amount'].replace(/,/g, '') === row1['Amount'].replace(/,/g, '')
+        row2['Amount'].replace(/,/g, '') === row1['Amount'].replace(/,/g, ''),
     );
 
     // Copy category if match found
