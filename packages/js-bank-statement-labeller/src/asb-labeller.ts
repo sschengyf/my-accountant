@@ -28,8 +28,8 @@ export function labelAsbBankStatement({
 
   // Convert the sheets to JSON
   const bankStatementData: Record<string, any>[] = xlsx.utils.sheet_to_json(bankStatementSheet, {
-    range: 5,
-    header: 5,
+    range: 6,
+    header: 6,
     raw: false,
   });
   const ledgerData: Record<string, any>[] = xlsx.utils.sheet_to_json(ledgerSheet, {

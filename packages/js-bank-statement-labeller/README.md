@@ -12,5 +12,5 @@ yarn label-bank-statement <BANK_NAME> <STATEMENT_FILE> <LEDGER_FILE> -o <OUTPUT_
 ## Example
 
 ```bash
-yarn label-bank-statement asb statement.xlsx ledger.xlsx -o asb-statement-labelled.xlsx
+yarn label-bank-statement asb statement.csv ledger.csv -o asb-statement-labelled.csv
 ```
