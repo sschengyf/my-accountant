@@ -4,10 +4,13 @@ import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
 import FormData from 'form-data';
+import { GoogleAuth } from 'google-auth-library';
 
 dotenv.config();
 
 const receiver = new ExpressReceiver({ signingSecret: process.env.SLACK_SIGNING_SECRET as string });
+
+const auth = new GoogleAuth();
 
 receiver.router.get('/health', (req, res) => {
   res.status(200).send('OK');
@@ -61,8 +64,29 @@ app.event('file_shared', async ({ event, client }) => {
       const formData = new FormData();
       formData.append('file', fs.createReadStream(filePath));
 
-      const apiResponse = await axios.post(process.env.CATEGORIZER_API_URL as string, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+      const categorizerApiUrl = process.env.CATEGORIZER_API_URL as string;
+      const deploymentEnvironment = process.env.DEPLOYMENT_ENV || 'local';
+
+      const headers = await (async () => {
+        const baseHeaders = {
+          'Content-Type': 'multipart/form-data',
+        };
+
+        if (deploymentEnvironment === 'gcp') {
+          const authClient = await auth.getIdTokenClient(categorizerApiUrl);
+          const token = await authClient.idTokenProvider.fetchIdToken(categorizerApiUrl);
+
+          return {
+            ...baseHeaders,
+            Authorization: `Bearer ${token}`,
+          };
+        }
+
+        return baseHeaders;
+      })();
+
+      const apiResponse = await axios.post(categorizerApiUrl, formData, {
+        headers,
       });
 
       const csvContent = apiResponse.data;
