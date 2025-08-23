@@ -17,11 +17,8 @@ const categories: string[] = JSON.parse(
   fs.readFileSync(path.join(__dirname, '../', 'models', 'transaction_categories.json'), 'utf8'),
 );
 
-// Load Sentence Transformer model
-let embedder: any;
-(async () => {
-  embedder = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
-})();
+// Load Sentence Transformer model as a promise
+const embedderPromise = pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
 
 export async function categorizeStatementData(
   data: ASBTransaction[] = [],
@@ -35,6 +32,7 @@ export async function categorizeStatementData(
     (row) => `${row.Payee.trim()} ${row.Memo?.trim() || ''} ${row['Tran Type']?.trim() || ''}`,
   );
 
+  const embedder = await embedderPromise;
   const embeddings = await embedder(transactionContexts, {
     pooling: 'mean',
     normalize: true,
