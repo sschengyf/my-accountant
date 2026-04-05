@@ -40,9 +40,9 @@ const MONEY_WIZ_CSV_AND_ASB_TRAN_MAPPING = {
   Probability: 'Probability',
 };
 
-export function generateMoneyWizCSV(data: ASBTransactionCategorized[]): string {
+export function generateMoneyWizCSV(data: ASBTransactionCategorized[], account: string): string {
   const csvData = data.map((asbTranRow) => {
-    const csvRow = { ...DEFAULT_CSV_ROW };
+    const csvRow = { ...DEFAULT_CSV_ROW, Account: account };
     Object.entries(MONEY_WIZ_CSV_AND_ASB_TRAN_MAPPING).forEach(
       ([csvKey, asbKey]) => {
         csvRow[csvKey] = asbTranRow[asbKey];

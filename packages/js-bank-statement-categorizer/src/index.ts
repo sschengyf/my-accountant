@@ -45,7 +45,7 @@ app.post('/upload', upload.single('file'), (async (req: Request, res: Response) 
     fs.unlinkSync(filePath); // Remove uploaded file after processing
 
     const categorizedData = await categorizeStatementData(data);
-    const csv = generateMoneyWizCSV(categorizedData);
+    const csv = generateMoneyWizCSV(categorizedData, (req.query.account as string) ?? '');
 
     // Set response headers for CSV
     res.setHeader('Content-Type', 'text/csv');
