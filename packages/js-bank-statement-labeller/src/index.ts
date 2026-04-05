@@ -1,10 +1,12 @@
 import { Command } from 'commander';
 import { labelAsbBankStatement } from './asb-labeller';
+import { labelAnzBankStatement } from './anz-labeller';
 import path from 'path';
 import fs from 'fs';
 
 const BANK_NAME_TO_LABELLER_MAP = {
   ASB: labelAsbBankStatement,
+  ANZ: labelAnzBankStatement,
 };
 
 type BankName = keyof typeof BANK_NAME_TO_LABELLER_MAP;
