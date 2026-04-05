@@ -1,0 +1,62 @@
+name: Deploy js-slack-bot
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-slack-bot
+  cancel-in-progress: true
+
+env:
+  REGION: ${{ vars.GCP_REGION }}
+  IMAGE: australia-southeast1-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/my-accountant-image-repo/slack-bot
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker australia-southeast1-docker.pkg.dev --quiet
+
+      - name: Build base image
+        run: docker build -f Dockerfile -t base .
+
+      - name: Build slack-bot image
+        run: docker build -f packages/js-slack-bot/Dockerfile -t js-slack-bot .
+
+      - name: Tag image
+        run: |
+          docker tag js-slack-bot ${{ env.IMAGE }}:latest
+          docker tag js-slack-bot ${{ env.IMAGE }}:${{ github.sha }}
+
+      - name: Push image
+        run: |
+          docker push ${{ env.IMAGE }}:latest
+          docker push ${{ env.IMAGE }}:${{ github.sha }}
+
+      - name: Deploy to Cloud Run
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: slack-bot
+          region: ${{ env.REGION }}
+          image: ${{ env.IMAGE }}:${{ github.sha }}
+          flags: --allow-unauthenticated
+          env_vars: |
+            SLACK_BOT_TOKEN=${{ secrets.SLACK_BOT_TOKEN }}
+            SLACK_SIGNING_SECRET=${{ secrets.SLACK_SIGNING_SECRET }}
+            CATEGORIZER_API_URL=${{ secrets.CATEGORIZER_API_URL }}
+            DEPLOYMENT_ENV=gcp
