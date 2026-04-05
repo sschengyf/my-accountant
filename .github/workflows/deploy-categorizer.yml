@@ -1,0 +1,56 @@
+name: Deploy js-bank-statement-categorizer
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-categorizer
+  cancel-in-progress: true
+
+env:
+  REGION: ${{ vars.GCP_REGION }}
+  IMAGE: australia-southeast1-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/my-accountant-image-repo/bank-statement-categorizer
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker australia-southeast1-docker.pkg.dev --quiet
+
+      - name: Build base image
+        run: docker build -f Dockerfile -t base .
+
+      - name: Build categorizer image
+        run: docker build -f packages/js-bank-statement-categorizer/Dockerfile -t js-bank-statement-categorizer .
+
+      - name: Tag image
+        run: |
+          docker tag js-bank-statement-categorizer ${{ env.IMAGE }}:latest
+          docker tag js-bank-statement-categorizer ${{ env.IMAGE }}:${{ github.sha }}
+
+      - name: Push image
+        run: |
+          docker push ${{ env.IMAGE }}:latest
+          docker push ${{ env.IMAGE }}:${{ github.sha }}
+
+      - name: Deploy to Cloud Run
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: bank-statement-categorizer
+          region: ${{ env.REGION }}
+          image: ${{ env.IMAGE }}:${{ github.sha }}
+          flags: --no-allow-unauthenticated
