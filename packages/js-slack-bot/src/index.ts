@@ -107,6 +107,11 @@ app.view('categorize_modal', async ({ ack, view, client }) => {
   const files = view.state.values.file_block.file_input.files || [];
   const channelId = view.private_metadata;
 
+  await client.chat.postMessage({
+    channel: channelId,
+    text: 'Processing your bank statement, please wait...',
+  });
+
   if (files.length === 0) return;
 
   const fileId = files[0].id;
