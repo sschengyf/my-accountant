@@ -9,6 +9,15 @@ function createOutputDir(outputPath: string): void {
   }
 }
 
+// Convert xlsx output date M/D/YY back to YYYY/MM/DD
+function normalizeDate(dateStr: string): string {
+  const parts = dateStr.split('/');
+  if (parts.length === 3 && parts[2].length === 2) {
+    return `20${parts[2]}/${parts[0].padStart(2, '0')}/${parts[1].padStart(2, '0')}`;
+  }
+  return dateStr;
+}
+
 export function labelAsbBankStatement({
   bankStatementPath,
   ledgerPath,
@@ -61,10 +70,17 @@ export function labelAsbBankStatement({
     row1[columnToCopy] = matchingRow ? matchingRow[columnToCopy] : '';
   }
 
-  // Convert JSON back to a worksheet
-  const newSheet: xlsx.WorkSheet = xlsx.utils.json_to_sheet(bankStatementData);
+  // Map to unified output format
+  const unifiedData = bankStatementData.map((row) => ({
+    Date: normalizeDate(row['Date']),
+    Amount: row['Amount'],
+    Payee: row['Payee'] || '',
+    Memo: row['Memo'] || '',
+    'Tran Type': row['Tran Type'] || '',
+    Category: row['Category'] || '',
+  }));
 
-  // Update the second workbook
+  const newSheet: xlsx.WorkSheet = xlsx.utils.json_to_sheet(unifiedData);
   bankStatement.Sheets[bankStatement.SheetNames[0]] = newSheet;
 
   // Write the updated workbook to a new file in the output directory

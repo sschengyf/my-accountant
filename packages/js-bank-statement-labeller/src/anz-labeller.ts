@@ -110,7 +110,17 @@ export function labelAnzBankStatement({
     row1[columnToCopy] = matchingRow ? matchingRow[columnToCopy] : '';
   }
 
-  const newSheet: xlsx.WorkSheet = xlsx.utils.json_to_sheet(bankStatementData);
+  // Map to unified output format
+  const unifiedData = bankStatementData.map((row) => ({
+    Date: row['Date'],
+    Amount: row['Amount'],
+    Payee: row['Details'] || '',
+    Memo: [row['Particulars'], row['Code'], row['Reference']].filter(Boolean).join(' '),
+    'Tran Type': row['Type'] || '',
+    Category: row['Category'] || '',
+  }));
+
+  const newSheet: xlsx.WorkSheet = xlsx.utils.json_to_sheet(unifiedData);
   bankStatement.Sheets[bankStatement.SheetNames[0]] = newSheet;
 
   createOutputDir(outputPath);
