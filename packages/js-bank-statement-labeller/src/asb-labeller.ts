@@ -1,91 +1,44 @@
 import * as xlsx from 'xlsx';
-import * as path from 'path';
-import * as fs from 'fs';
-
-function createOutputDir(outputPath: string): void {
-  const outputDir = path.dirname(outputPath);
-  if (!fs.existsSync(outputDir)) {
-    fs.mkdirSync(outputDir, { recursive: true });
-  }
-}
+import { labelBankStatement, UnifiedRow } from './utils';
 
 // Convert xlsx output date M/D/YY back to YYYY/MM/DD
-function normalizeDate(dateStr: string): string {
+export function normalizeDate(dateStr: string): string {
   const parts = dateStr.split('/');
-  if (parts.length === 3 && parts[2].length === 2) {
+  if (parts.length === 3 && parts[2].length === 2 && parts[0].length <= 2) {
     return `20${parts[2]}/${parts[0].padStart(2, '0')}/${parts[1].padStart(2, '0')}`;
   }
   return dateStr;
 }
 
-export function labelAsbBankStatement({
-  bankStatementPath,
-  ledgerPath,
-  outputPath,
-}: {
-  bankStatementPath: string;
-  ledgerPath: string;
-  outputPath: string;
-}) {
-  // Load the two workbooks using proper path joining
-  const bankStatement: xlsx.WorkBook = xlsx.readFile(bankStatementPath);
-  const ledger: xlsx.WorkBook = xlsx.readFile(ledgerPath);
+function parseAsbStatement(sheet: xlsx.WorkSheet): UnifiedRow[] {
+  const allData: any[] = xlsx.utils.sheet_to_json(sheet, { header: 1 });
 
-  // Get the first worksheet from each workbook
-  const bankStatementSheet: xlsx.WorkSheet = bankStatement.Sheets[bankStatement.SheetNames[0]];
-  const ledgerSheet: xlsx.WorkSheet = ledger.Sheets[ledger.SheetNames[0]];
+  const ledgerBalanceRowNum = allData.findIndex(
+    (row) => row[0] && typeof row[0] === 'string' && row[0].includes('Ledger Balance'),
+  );
 
-  // Convert the sheets to JSON
-  const bankStatementData: Record<string, any>[] = xlsx.utils.sheet_to_json(bankStatementSheet, {
-    range: 6,
-    header: 6,
-    raw: false,
-  });
-  const ledgerData: Record<string, any>[] = xlsx.utils.sheet_to_json(ledgerSheet, {
+  const startRowNum = ledgerBalanceRowNum + 1;
+
+  const rows = xlsx.utils.sheet_to_json<Record<string, any>>(sheet, {
+    range: startRowNum,
+    header: startRowNum,
     raw: false,
   });
 
-  // Assuming we want to copy a column "ColumnToCopy" from bank statement sheet to ledger sheet
-  const columnToCopy = 'Category';
-  const bankTransfers = 'Transfers';
-
-  //Check if the column exists in the ledger sheet
-  if (![bankTransfers, columnToCopy].find((col: string) => ledgerData[1]?.hasOwnProperty(col))) {
-    console.log('ledgerData[1]', ledgerData[1]);
-    console.error(
-      `Neither column "${columnToCopy}" nor "${bankTransfers}" was found in ledger sheet.`,
-    );
-    process.exit(1);
-  }
-
-  for (const row1 of bankStatementData) {
-    // Find matching row in ledgerData
-    const matchingRow = ledgerData.find(
-      (row2) =>
-        row2['Date'] === row1['Date'] &&
-        row2['Amount'].replace(/,/g, '') === row1['Amount'].replace(/,/g, ''),
-    );
-
-    // Copy category if match found
-    row1[columnToCopy] = matchingRow ? matchingRow[columnToCopy] : '';
-  }
-
-  // Map to unified output format
-  const unifiedData = bankStatementData.map((row) => ({
+  return rows.map((row) => ({
     Date: normalizeDate(row['Date']),
     Amount: row['Amount'],
     Payee: row['Payee'] || '',
     Memo: row['Memo'] || '',
     'Tran Type': row['Tran Type'] || '',
-    Category: row['Category'] || '',
+    Category: '',
   }));
+}
 
-  const newSheet: xlsx.WorkSheet = xlsx.utils.json_to_sheet(unifiedData);
-  bankStatement.Sheets[bankStatement.SheetNames[0]] = newSheet;
-
-  // Write the updated workbook to a new file in the output directory
-  createOutputDir(outputPath);
-  xlsx.writeFile(bankStatement, outputPath);
-
-  console.log(`Labelled file saved to ${outputPath}`);
+export function labelAsbBankStatement(params: {
+  bankStatementPath: string;
+  ledgerPath: string;
+  outputPath: string;
+}) {
+  labelBankStatement({ ...params, parseStatement: parseAsbStatement });
 }
