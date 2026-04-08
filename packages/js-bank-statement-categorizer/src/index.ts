@@ -6,7 +6,13 @@ import * as path from 'path';
 import cors from 'cors';
 import { categorizeStatementData } from './categorizer';
 import { generateMoneyWizCSV } from './money-wiz-file-generator';
-import { ASBTransaction } from './types';
+import { parseAsb } from './parsers/asb-parser';
+import { parseAnz } from './parsers/anz-parser';
+
+const BANK_PARSERS: Record<string, (workbook: xlsx.WorkBook) => any[]> = {
+  asb: parseAsb,
+  anz: parseAnz,
+};
 
 const app = express();
 const upload = multer({ dest: 'uploads/' });
@@ -22,36 +28,27 @@ app.post('/upload', upload.single('file'), (async (req: Request, res: Response) 
       return;
     }
 
+    const bank = ((req.query.bank as string) || 'asb').toLowerCase();
+    const account = (req.query.account as string) ?? '';
+
+    const parser = BANK_PARSERS[bank];
+    if (!parser) {
+      res.status(400).json({ error: `Unsupported bank: ${bank}` });
+      return;
+    }
+
     const filePath = path.join('uploads', req.file.filename);
     const workbook = xlsx.readFile(filePath);
-    const sheetName = workbook.SheetNames[0];
 
-    const allData: any[] = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName], {
-      header: 1,
-    });
+    const data = parser(workbook);
 
-    const ledgerBalanceRowNum = allData.findIndex((row) => {
-      return row[0] && typeof row[0] === 'string' && row[0].includes('Ledger Balance');
-    });
+    fs.unlinkSync(filePath);
 
-    const startRowNum = ledgerBalanceRowNum + 1; // Skip the header rows
+    const categorizedData = await categorizeStatementData(data, bank);
+    const csv = generateMoneyWizCSV(categorizedData, account);
 
-    const data = xlsx.utils.sheet_to_json<ASBTransaction>(workbook.Sheets[sheetName], {
-      range: startRowNum,
-      header: startRowNum,
-      raw: false,
-    });
-
-    fs.unlinkSync(filePath); // Remove uploaded file after processing
-
-    const categorizedData = await categorizeStatementData(data);
-    const csv = generateMoneyWizCSV(categorizedData, (req.query.account as string) ?? '');
-
-    // Set response headers for CSV
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', 'attachment; filename="money-wiz.csv"');
-
-    // Send the CSV string as the response
     res.send(csv);
     return;
   } catch (error) {

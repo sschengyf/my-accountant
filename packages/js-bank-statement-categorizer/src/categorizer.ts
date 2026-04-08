@@ -2,27 +2,25 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as ort from 'onnxruntime-node';
 import { pipeline } from '@xenova/transformers';
-import { ASBTransaction, ASBTransactionCategorized } from './types';
+import { Transaction, TransactionCategorized } from './types';
 
-// Load classifier ONNX model
-let transaction_classifier: ort.InferenceSession;
-(async () => {
-  transaction_classifier = await ort.InferenceSession.create(
-    path.join(__dirname, '../', 'models', 'transaction_classifier.onnx'),
-  );
-})();
-
-// Load category mappings
-const categories: string[] = JSON.parse(
-  fs.readFileSync(path.join(__dirname, '../', 'models', 'transaction_categories.json'), 'utf8'),
-);
+const classifierSessions: Record<string, ort.InferenceSession> = {};
+async function getClassifier(bank: string): Promise<ort.InferenceSession> {
+  if (!classifierSessions[bank]) {
+    classifierSessions[bank] = await ort.InferenceSession.create(
+      path.join(__dirname, '../', 'models', `${bank}_transaction_classifier.onnx`),
+    );
+  }
+  return classifierSessions[bank];
+}
 
 // Load Sentence Transformer model as a promise
 const embedderPromise = pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
 
 export async function categorizeStatementData(
-  data: ASBTransaction[] = [],
-): Promise<ASBTransactionCategorized[]> {
+  data: Transaction[],
+  bank: string,
+): Promise<TransactionCategorized[]> {
   const requiredColumns = ['Payee', 'Memo', 'Tran Type'];
   if (!requiredColumns.every((col) => col in data[0])) {
     throw new Error('Missing required columns in data.');
@@ -41,8 +39,8 @@ export async function categorizeStatementData(
   // Convert embeddings to tensor for ONNX
   const inputTensor = new ort.Tensor(embeddings.type, embeddings.data, embeddings.dims);
 
-  // Run classification
-  const result = await transaction_classifier.run({
+  const classifier = await getClassifier(bank);
+  const result = await classifier.run({
     float_input: inputTensor,
   });
 
