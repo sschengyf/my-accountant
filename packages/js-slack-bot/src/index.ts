@@ -23,7 +23,7 @@ const app = new App({
   receiver,
 });
 
-async function callCategorizer(filePath: string, fileName: string, account: string, channelId: string) {
+async function callCategorizer(filePath: string, fileName: string, account: string, bank: string, channelId: string) {
   const formData = new FormData();
   formData.append('file', fs.createReadStream(filePath));
 
@@ -43,7 +43,7 @@ async function callCategorizer(filePath: string, fileName: string, account: stri
   })();
 
   const apiResponse = await axios.post(
-    `${categorizerApiUrl}?account=${encodeURIComponent(account)}`,
+    `${categorizerApiUrl}?bank=${encodeURIComponent(bank)}&account=${encodeURIComponent(account)}`,
     formData,
     { headers },
   );
@@ -76,6 +76,20 @@ app.command('/cat-stmt', async ({ ack, body, client }) => {
       blocks: [
         {
           type: 'input',
+          block_id: 'bank_block',
+          label: { type: 'plain_text', text: 'Bank' },
+          element: {
+            type: 'static_select',
+            action_id: 'bank_input',
+            placeholder: { type: 'plain_text', text: 'Select a bank' },
+            options: [
+              { text: { type: 'plain_text', text: 'ASB' }, value: 'asb' },
+              { text: { type: 'plain_text', text: 'ANZ' }, value: 'anz' },
+            ],
+          },
+        },
+        {
+          type: 'input',
           block_id: 'account_block',
           label: { type: 'plain_text', text: 'Account Name' },
           element: {
@@ -103,6 +117,7 @@ app.command('/cat-stmt', async ({ ack, body, client }) => {
 app.view('categorize_modal', async ({ ack, view, client }) => {
   await ack();
 
+  const bank = view.state.values.bank_block.bank_input.selected_option?.value || 'asb';
   const account = view.state.values.account_block.account_input.value || '';
   const files = view.state.values.file_block.file_input.files || [];
   const channelId = view.private_metadata;
@@ -135,7 +150,7 @@ app.view('categorize_modal', async ({ ack, view, client }) => {
 
   writer.on('finish', async () => {
     try {
-      await callCategorizer(filePath, fileName, account, channelId);
+      await callCategorizer(filePath, fileName, account, bank, channelId);
     } catch (error) {
       console.error('Error processing file:', error);
     }
