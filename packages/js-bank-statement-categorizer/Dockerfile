@@ -10,7 +10,7 @@ RUN yarn workspace js-bank-statement-categorizer build
 WORKDIR /app
 RUN node packages/js-bank-statement-categorizer/scripts/download-model.js
 
-FROM node:20-slim AS production
+FROM node:24-slim AS production
 WORKDIR /app
 
 ARG PORT=3001

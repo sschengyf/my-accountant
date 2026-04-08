@@ -6,7 +6,7 @@ RUN yarn workspace js-slack-bot install
 ENV NODE_ENV=production
 RUN yarn workspace js-slack-bot build
 
-FROM node:20-alpine AS production
+FROM node:24-alpine AS production
 WORKDIR /app
 
 ARG PORT=3002
