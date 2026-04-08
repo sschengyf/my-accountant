@@ -1,8 +1,12 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as ort from 'onnxruntime-node';
-import { pipeline } from '@xenova/transformers';
+import { pipeline, env } from '@xenova/transformers';
 import { Transaction, TransactionCategorized } from './types';
+
+if (process.env.TRANSFORMERS_CACHE) {
+  env.cacheDir = process.env.TRANSFORMERS_CACHE;
+}
 
 const classifierSessions: Record<string, ort.InferenceSession> = {};
 async function getClassifier(bank: string): Promise<ort.InferenceSession> {
