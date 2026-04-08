@@ -93,6 +93,8 @@ CLI only (no server). Reads ASB bank statement Excel (skipping first 6 rows) and
 
 Python Jupyter environment (Docker only). Trains a scikit-learn classifier on labeled transaction data using `sentence-transformers` embeddings, exports to ONNX via `skl2onnx`. The exported model and category JSON are then copied to `js-bank-statement-categorizer/models/` to update production inference.
 
+- Main notebook: `notebooks/ml-train-models.ipynb`. Set `bank = 'asb'` or `bank = 'anz'` in the config cell, then run all cells. Outputs `models/{bank}_transaction_classifier.onnx` + `models/{bank}_transaction_categories.json`.
+
 ### TypeScript config
 
 All packages extend `tsconfig.base.json` (CommonJS, ES2017 target, strict but `noImplicitAny: false`). Each package compiles to its own `dist/` directory.
