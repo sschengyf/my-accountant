@@ -50,10 +50,13 @@ async function callCategorizer(filePath: string, fileName: string, account: stri
 
   const csvContent = apiResponse.data;
 
+  const date = new Date().toISOString().slice(0, 10);
+  const csvFilename = `${account || 'money-wiz'}-${date}.csv`;
+
   await app.client.files.uploadV2({
     channel_id: channelId,
     content: csvContent,
-    filename: 'data.csv',
+    filename: csvFilename,
     title: 'Generated CSV File',
   });
 
