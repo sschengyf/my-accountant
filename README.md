@@ -4,12 +4,14 @@ A homemade toolchain to help me manage my finances 🏦.
 
 ## Pipeline
 
-```
-Bank statement (CSV)
-  → js-bank-statement-labeller   — copies categories from existing ledger by date+amount match
-  → transaction-modeller         — trains ML classifier on labelled data, exports ONNX model
-  → js-bank-statement-categorizer — ML inference → Money Wiz CSV
-  → js-slack-bot                 — Slack UI: receives upload, calls categorizer, posts CSV back
+```mermaid
+flowchart LR
+    A[Bank statement CSV] -->|label by date+amount| B[js-bank-statement-labeller]
+    B -->|labelled CSV| C[transaction-modeller]
+    C -->|ONNX model| D[js-bank-statement-categorizer]
+    A -->|upload via Slack| E[js-slack-bot]
+    E -->|POST CSV| D
+    D -->|Money Wiz CSV| E
 ```
 
 ## Supported banks
