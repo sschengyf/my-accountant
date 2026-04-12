@@ -40,6 +40,18 @@ const MONEY_WIZ_CSV_AND_ASB_TRAN_MAPPING = {
   Probability: 'Probability',
 };
 
+// Convert YYYY/MM/DD to M/D/YY
+export function formatDate(dateStr: string): string {
+  const parts = dateStr.split('/');
+  if (parts.length === 3 && parts[0].length === 4) {
+    const m = parseInt(parts[1], 10);
+    const d = parseInt(parts[2], 10);
+    const yy = parts[0].slice(2);
+    return `${m}/${d}/${yy}`;
+  }
+  return dateStr;
+}
+
 export function generateMoneyWizCSV(data: TransactionCategorized[], account: string): string {
   const csvData = data.map((asbTranRow) => {
     const csvRow = { ...DEFAULT_CSV_ROW, Account: account };
@@ -48,6 +60,7 @@ export function generateMoneyWizCSV(data: TransactionCategorized[], account: str
         csvRow[csvKey] = asbTranRow[asbKey];
       }
     );
+    csvRow['Date'] = formatDate(csvRow['Date']);
     return csvRow;
   });
 

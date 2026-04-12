@@ -1,6 +1,5 @@
 import express, { Request, Response, RequestHandler } from 'express';
 import multer from 'multer';
-import * as xlsx from 'xlsx';
 import * as fs from 'fs';
 import * as path from 'path';
 import cors from 'cors';
@@ -9,7 +8,7 @@ import { generateMoneyWizCSV } from './money-wiz-file-generator';
 import { parseAsb } from './parsers/asb-parser';
 import { parseAnz } from './parsers/anz-parser';
 
-const BANK_PARSERS: Record<string, (workbook: xlsx.WorkBook) => any[]> = {
+const BANK_PARSERS: Record<string, (filePath: string) => any[]> = {
   asb: parseAsb,
   anz: parseAnz,
 };
@@ -38,9 +37,7 @@ app.post('/upload', upload.single('file'), (async (req: Request, res: Response) 
     }
 
     const filePath = path.join('uploads', req.file.filename);
-    const workbook = xlsx.readFile(filePath);
-
-    const data = parser(workbook);
+    const data = parser(filePath);
 
     fs.unlinkSync(filePath);
 

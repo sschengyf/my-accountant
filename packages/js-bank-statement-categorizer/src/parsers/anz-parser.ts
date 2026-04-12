@@ -1,8 +1,8 @@
-import * as xlsx from 'xlsx';
+import * as fs from 'fs';
 import { Transaction } from '../types';
 
 // Convert ANZ date DD/MM/YYYY to YYYY/MM/DD
-function normalizeDate(dateStr: string): string {
+export function normalizeDate(dateStr: string): string {
   const parts = dateStr.split('/');
   if (parts.length === 3 && parts[0].length === 2) {
     return `${parts[2]}/${parts[1]}/${parts[0]}`;
@@ -10,27 +10,24 @@ function normalizeDate(dateStr: string): string {
   return dateStr;
 }
 
-export function parseAnz(workbook: xlsx.WorkBook): Transaction[] {
-  const sheet = workbook.Sheets[workbook.SheetNames[0]];
+export function parseAnz(filePath: string): Transaction[] {
+  const content = fs.readFileSync(filePath, 'utf-8');
+  const lines = content.split(/\r?\n/).filter((line) => line.trim());
 
-  // ANZ CSV has no metadata rows — header is row 0
-  const rows = xlsx.utils.sheet_to_json<ANZRow>(sheet, { raw: false });
+  const headers = lines[0].split(',');
+  const idx = (name: string) => headers.indexOf(name);
 
-  return rows.map((row) => ({
-    Date: normalizeDate(row['Date']),
-    'Tran Type': row['Type'] || '',
-    Payee: row['Details'] || '',
-    Memo: [row['Particulars'], row['Code'], row['Reference']].filter(Boolean).join(' '),
-    Amount: row['Amount'],
-  }));
+  return lines.slice(1).map((line) => {
+    const cols = line.split(',');
+    return {
+      Date: normalizeDate(cols[idx('Date')]?.trim() || ''),
+      'Tran Type': cols[idx('Type')]?.trim() || '',
+      Payee: cols[idx('Details')]?.trim() || '',
+      Memo: [cols[idx('Particulars')], cols[idx('Code')], cols[idx('Reference')]]
+        .map((s) => s?.trim())
+        .filter(Boolean)
+        .join(' '),
+      Amount: cols[idx('Amount')]?.trim() || '',
+    };
+  });
 }
-
-type ANZRow = {
-  Type: string;
-  Details: string;
-  Particulars: string;
-  Code: string;
-  Reference: string;
-  Amount: string;
-  Date: string;
-};

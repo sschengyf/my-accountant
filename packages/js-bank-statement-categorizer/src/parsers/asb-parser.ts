@@ -1,7 +1,8 @@
 import * as xlsx from 'xlsx';
 import { Transaction } from '../types';
 
-export function parseAsb(workbook: xlsx.WorkBook): Transaction[] {
+export function parseAsb(filePath: string): Transaction[] {
+  const workbook = xlsx.readFile(filePath);
   const sheet = workbook.Sheets[workbook.SheetNames[0]];
 
   const allData: any[] = xlsx.utils.sheet_to_json(sheet, { header: 1 });
