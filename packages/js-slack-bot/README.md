@@ -1,5 +1,11 @@
 # `js-slack-bot` 🤖
 
+## Usage
+
+Use the `/cat-stmt` slash command to open the modal. Select a bank, enter an account name, and upload a bank statement CSV. The bot will call the categorizer and post the resulting Money Wiz CSV back to the channel.
+
+Supported banks: **ASB**, **ANZ**, **Kiwibank**.
+
 ## Local dev
 
 ### Prerequisite

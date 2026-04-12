@@ -88,6 +88,7 @@ app.command('/cat-stmt', async ({ ack, body, client }) => {
             options: [
               { text: { type: 'plain_text', text: 'ASB' }, value: 'asb' },
               { text: { type: 'plain_text', text: 'ANZ' }, value: 'anz' },
+              { text: { type: 'plain_text', text: 'Kiwibank' }, value: 'kiwibank' },
             ],
           },
         },

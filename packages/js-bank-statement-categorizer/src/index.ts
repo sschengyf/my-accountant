@@ -7,10 +7,12 @@ import { categorizeStatementData } from './categorizer';
 import { generateMoneyWizCSV } from './money-wiz-file-generator';
 import { parseAsb } from './parsers/asb-parser';
 import { parseAnz } from './parsers/anz-parser';
+import { parseKiwibank } from './parsers/kiwibank-parser';
 
 const BANK_PARSERS: Record<string, (filePath: string) => any[]> = {
   asb: parseAsb,
   anz: parseAnz,
+  kiwibank: parseKiwibank,
 };
 
 const app = express();
