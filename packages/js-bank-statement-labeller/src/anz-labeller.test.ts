@@ -1,5 +1,5 @@
 import * as xlsx from 'xlsx';
-import { normalizeBankDate, fixAnzDateCells } from './anz-labeller';
+import { normalizeBankDate, fixAnzDateCells, parseAnzRow } from './anz-labeller';
 
 describe('normalizeBankDate', () => {
   it('converts DD/MM/YYYY to YYYY/MM/DD', () => {
@@ -42,5 +42,20 @@ describe('fixAnzDateCells', () => {
   it('does nothing if there is no Date column', () => {
     const sheet = xlsx.utils.aoa_to_sheet([['Amount'], ['100']]);
     expect(() => fixAnzDateCells(sheet)).not.toThrow();
+  });
+});
+
+describe('parseAnzRow', () => {
+  it('uses Details as payee for Eft-Pos', () => {
+    const row = parseAnzRow({ Type: 'Eft-Pos', Details: 'Mock Store', Particulars: 'P', Code: 'C', Reference: 'R', Date: '04/05/2026', Amount: '-10.00' });
+    expect(row.Payee).toBe('Mock Store');
+    expect(row.Memo).toBe('P C R');
+    expect(row['Tran Type']).toBe('Eft-Pos');
+  });
+
+  it.each(['Visa Purchase', 'Visa Refund'])('uses Code as payee for %s', (type) => {
+    const row = parseAnzRow({ Type: type, Details: '4835-****-****-0442  Df', Code: 'Greens', Reference: '', Date: '01/05/2026', Amount: '-25.49' });
+    expect(row.Payee).toBe('Greens');
+    expect(row.Memo).toBe('4835-****-****-0442  Df');
   });
 });

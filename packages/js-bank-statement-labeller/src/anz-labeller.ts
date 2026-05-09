@@ -39,19 +39,46 @@ export function normalizeBankDate(dateStr: string): string {
   return dateStr;
 }
 
+type RowGetter = (name: string) => string;
+type FieldExtractor = (row: RowGetter) => { payee: string; memo: string };
+
+const joinMemo = (...fields: string[]) => fields.filter(Boolean).join(' ');
+
+const visaExtractor: FieldExtractor = (row) => ({
+  payee: row('Code'),
+  memo: joinMemo(row('Details'), row('Reference')),
+});
+
+// Add a new entry here to handle payee/memo extraction for a specific transaction type.
+const fieldExtractors: Record<string, FieldExtractor> = {
+  'Visa Purchase': visaExtractor,
+  'Visa Refund': visaExtractor,
+};
+
+const defaultFieldExtractor: FieldExtractor = (row) => ({
+  payee: row('Details'),
+  memo: joinMemo(row('Particulars'), row('Code'), row('Reference')),
+});
+
+export function parseAnzRow(rawRow: Record<string, any>): UnifiedRow {
+  const get: RowGetter = (name) => rawRow[name] || '';
+  const type = get('Type');
+  const extractor = fieldExtractors[type] ?? defaultFieldExtractor;
+  const { payee, memo } = extractor(get);
+  return {
+    Date: normalizeBankDate(get('Date')),
+    Amount: get('Amount'),
+    Payee: payee,
+    Memo: memo,
+    'Tran Type': type,
+    Category: '',
+  };
+}
+
 function parseAnzStatement(sheet: xlsx.WorkSheet): UnifiedRow[] {
   fixAnzDateCells(sheet);
-
   const rows = xlsx.utils.sheet_to_json<Record<string, any>>(sheet, { raw: false });
-
-  return rows.map((row) => ({
-    Date: normalizeBankDate(row['Date']),
-    Amount: row['Amount'],
-    Payee: row['Details'] || '',
-    Memo: [row['Particulars'], row['Code'], row['Reference']].filter(Boolean).join(' '),
-    'Tran Type': row['Type'] || '',
-    Category: '',
-  }));
+  return rows.map(parseAnzRow);
 }
 
 export function labelAnzBankStatement(params: {
