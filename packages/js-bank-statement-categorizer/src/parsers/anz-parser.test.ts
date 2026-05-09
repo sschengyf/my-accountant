@@ -40,7 +40,7 @@ describe('parseAnz', () => {
     expect(transactions[1].Date).toBe('2026/03/30');
   });
 
-  it('maps columns correctly', () => {
+  it('maps columns correctly for Eft-Pos (payee from Details)', () => {
     const csv = [
       'Type,Details,Particulars,Code,Reference,Amount,Date,ForeignCurrencyAmount,ConversionCharge',
       'Eft-Pos,Mock Store,Particulars,Code,Ref123,-10.00,09/04/2026,,',
@@ -54,5 +54,21 @@ describe('parseAnz', () => {
     expect(tx.Payee).toBe('Mock Store');
     expect(tx.Memo).toBe('Particulars Code Ref123');
     expect(tx.Amount).toBe('-10.00');
+  });
+
+  it('maps columns correctly for Visa Purchase (payee from Code)', () => {
+    const csv = [
+      'Type,Details,Particulars,Code,Reference,Amount,Date,ForeignCurrencyAmount,ConversionCharge',
+      'Visa Purchase,4835-****-****-0442  Df,,Greens,,-25.49,01/05/2026,,',
+    ].join('\n');
+
+    const filePath = writeTempCsv(csv);
+    const [tx] = parseAnz(filePath);
+    fs.unlinkSync(filePath);
+
+    expect(tx['Tran Type']).toBe('Visa Purchase');
+    expect(tx.Payee).toBe('Greens');
+    expect(tx.Memo).toBe('4835-****-****-0442  Df');
+    expect(tx.Amount).toBe('-25.49');
   });
 });
