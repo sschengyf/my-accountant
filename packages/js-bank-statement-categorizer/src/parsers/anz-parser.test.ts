@@ -56,19 +56,22 @@ describe('parseAnz', () => {
     expect(tx.Amount).toBe('-10.00');
   });
 
-  it('maps columns correctly for Visa Purchase (payee from Code)', () => {
-    const csv = [
-      'Type,Details,Particulars,Code,Reference,Amount,Date,ForeignCurrencyAmount,ConversionCharge',
-      'Visa Purchase,4835-****-****-0442  Df,,Greens,,-25.49,01/05/2026,,',
-    ].join('\n');
+  it.each([['Visa Purchase', '-25.49'], ['Visa Refund', '6.00']])(
+    'maps columns correctly for %s (payee from Code)',
+    (type, amount) => {
+      const csv = [
+        'Type,Details,Particulars,Code,Reference,Amount,Date,ForeignCurrencyAmount,ConversionCharge',
+        `${type},4835-****-****-0442  Df,,Greens,,${amount},01/05/2026,,`,
+      ].join('\n');
 
-    const filePath = writeTempCsv(csv);
-    const [tx] = parseAnz(filePath);
-    fs.unlinkSync(filePath);
+      const filePath = writeTempCsv(csv);
+      const [tx] = parseAnz(filePath);
+      fs.unlinkSync(filePath);
 
-    expect(tx['Tran Type']).toBe('Visa Purchase');
-    expect(tx.Payee).toBe('Greens');
-    expect(tx.Memo).toBe('4835-****-****-0442  Df');
-    expect(tx.Amount).toBe('-25.49');
-  });
+      expect(tx['Tran Type']).toBe(type);
+      expect(tx.Payee).toBe('Greens');
+      expect(tx.Memo).toBe('4835-****-****-0442  Df');
+      expect(tx.Amount).toBe(amount);
+    }
+  );
 });

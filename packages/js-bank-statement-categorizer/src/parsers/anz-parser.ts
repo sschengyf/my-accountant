@@ -15,12 +15,15 @@ type FieldExtractor = (col: ColGetter) => { payee: string; memo: string };
 
 const joinMemo = (...fields: string[]) => fields.filter(Boolean).join(' ');
 
+const visaExtractor: FieldExtractor = (col) => ({
+  payee: col('Code'),
+  memo: joinMemo(col('Details'), col('Reference')),
+});
+
 // Add a new entry here to handle payee/memo extraction for a specific transaction type.
 const fieldExtractors: Record<string, FieldExtractor> = {
-  'Visa Purchase': (col) => ({
-    payee: col('Code'),
-    memo: joinMemo(col('Details'), col('Reference')),
-  }),
+  'Visa Purchase': visaExtractor,
+  'Visa Refund': visaExtractor,
 };
 
 const defaultFieldExtractor: FieldExtractor = (col) => ({
